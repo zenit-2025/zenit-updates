@@ -222,7 +222,7 @@ def cerrar_programa():
 
 # --- Configuración Principal de la Ventana ---
 ventana = tk.Tk()
-ventana.title("Tecnología ZENIT - Media Downloader")
+ventana.title("Tecnología ZENIT - Versión 2.0")
 ventana.geometry("850x800")
 ventana.configure(bg=BG_COLOR)
 
