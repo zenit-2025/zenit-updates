@@ -2,39 +2,54 @@
 title TECNOLOGIA ZENIT - Inicializador del Sistema
 color 0B
 
+:: [SISTEMA ANTIBUCLE] Si el .bat se acaba de auto-actualizar, salta directo al programa.
+if "%~1"=="ACTUALIZADO" goto :fase_python
+
 echo =======================================================
-echo      Buscando Actualizaciones del Sistema...
+echo      Comprobando Actualizaciones del Sistema OTA...
 echo =======================================================
 echo.
 
-:: ENLACE DIRECTO A TU CÓDIGO EN GITHUB (Con destructor de caché)
-set "URL_SERVIDOR=https://raw.githubusercontent.com/zenit-2025/zenit-updates/main/Gestor-ZENIT.py?nocache=%RANDOM%"
+:: 1. ACTUALIZAR EL PROPIO LAUNCHER (.BAT)
+set "URL_BAT=https://raw.githubusercontent.com/zenit-2025/zenit-updates/main/Iniciar.bat?nocache=%RANDOM%"
+curl -s -f -L -o Iniciar_temp.bat "%URL_BAT%"
 
-:: Descarga el código a un archivo temporal
-curl -s -f -L -o actualizacion_temp.py "%URL_SERVIDOR%"
+IF EXIST Iniciar_temp.bat (
+    :: Compara el archivo local con el descargado
+    fc Iniciar.bat Iniciar_temp.bat >nul
+    if errorlevel 1 (
+        color 0E
+        echo [!] Nueva version del Lanzador detectada. Instalando...
+        copy /y Iniciar_temp.bat Iniciar.bat >nul
+        del Iniciar_temp.bat
+        :: Cierra esta ventana y abre la nueva version con una bandera secreta
+        start Iniciar.bat ACTUALIZADO
+        exit
+    )
+    :: Si no hay cambios en el .bat, borra el temporal y sigue normal
+    del Iniciar_temp.bat
+)
+
+:fase_python
+:: 2. ACTUALIZAR EL CODIGO PRINCIPAL (PYTHON)
+set "URL_PYTHON=https://raw.githubusercontent.com/zenit-2025/zenit-updates/main/Gestor-ZENIT.py?nocache=%RANDOM%"
+curl -s -f -L -o actualizacion_temp.py "%URL_PYTHON%"
 
 IF EXIST actualizacion_temp.py (
-    :: Reemplaza el archivo viejo con el nuevo
     move /y actualizacion_temp.py Gestor-ZENIT.py >nul
     color 0A
-    echo [OK] Sistema sincronizado y actualizado a la ultima version de TECNOLOGIA ZENIT.
+    echo [OK] Modulo principal (Python) sincronizado y al dia.
 ) ELSE (
     color 0E
-    echo [ADVERTENCIA] No se pudo conectar con el servidor central.
-    echo Iniciando la version local almacenada...
+    echo [ADVERTENCIA] No se pudo conectar al servidor. Usando version local.
 )
 echo.
 
 echo =======================================================
 echo      Verificando Dependencias de Software...
 echo =======================================================
-echo.
-
-echo [1/3] yt-dlp (Motor de Descarga)...
 pip install -U yt-dlp -q
-echo [2/3] Pillow (Motor Grafico)...
 pip install pillow -q
-echo [3/3] Mutagen (Metadatos)...
 pip install mutagen -q
 
 echo.
@@ -50,7 +65,6 @@ color 0B
 echo =======================================================
 echo      Iniciando Sistema Principal ZENIT-MX...
 echo =======================================================
-:: Ejecuta exactamente el nuevo nombre de tu archivo
 python Gestor-ZENIT.py
 
 exit
