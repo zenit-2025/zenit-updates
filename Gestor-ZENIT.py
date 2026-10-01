@@ -256,7 +256,7 @@ def cerrar_programa():
 
 # --- Configuración Principal de la Ventana ---
 ventana = tk.Tk()
-ventana.title("Tecnología ZENIT - Versión 2.0 Multi-Tema")
+ventana.title("BERNA EL PALOMO")
 ventana.geometry("850x850")
 
 # --- Inicialización de Estilos ---
