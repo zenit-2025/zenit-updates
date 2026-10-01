@@ -140,17 +140,30 @@ hilo_trabajador = threading.Thread(target=motor_de_descargas, daemon=True)
 hilo_trabajador.start()
 
 # ==========================================
-# 3. INTERFAZ GRÁFICA MODERNA (ZENIT-MX)
+# 3. INTERFAZ GRÁFICA MULTI-TEMA (ZENIT-MX)
 # ==========================================
 
-BG_COLOR = "#1a242f"        # Azul oscuro profundo (Fondo)
-FG_COLOR = "#ecf0f1"        # Blanco grisáceo (Texto general)
-ACCENT_COLOR = "#00a8e8"    # Azul cian vibrante (Botones y resaltes)
-ACCENT_HOVER = "#007bb5"    # Azul cian más oscuro
-PAUSE_COLOR = "#e74c3c"     # Rojo/Naranja para pausar
+# Catálogo de Temas Disponibles
+TEMAS = {
+    "Zenit (Oscuro)": {
+        "bg": "#1a242f", "fg": "#ecf0f1", "accent": "#00a8e8", "accent_h": "#007bb5",
+        "bg_panel": "#2c3e50", "bg_input": "#34495e", "c_bg": "#0b1015", "c_fg": "#00e5ff"
+    },
+    "Zenit (Claro)": {
+        "bg": "#f0f4f8", "fg": "#2c3e50", "accent": "#00a8e8", "accent_h": "#007bb5",
+        "bg_panel": "#ffffff", "bg_input": "#e1e8ed", "c_bg": "#ffffff", "c_fg": "#2c3e50"
+    },
+    "Terminal Hacker": {
+        "bg": "#000000", "fg": "#00ff00", "accent": "#006600", "accent_h": "#009900",
+        "bg_panel": "#0a0a0a", "bg_input": "#001100", "c_bg": "#000000", "c_fg": "#00ff00"
+    },
+    "Cyberpunk": {
+        "bg": "#0d0221", "fg": "#00f0ff", "accent": "#ff007f", "accent_h": "#cc0066",
+        "bg_panel": "#190440", "bg_input": "#26065c", "c_bg": "#05010d", "c_fg": "#ff00ff"
+    }
+}
+PAUSE_COLOR = "#e74c3c"
 PAUSE_HOVER = "#c0392b"
-CONSOLE_BG = "#0b1015"      # Negro cibernético (Consola)
-CONSOLE_FG = "#00e5ff"      # Neón cian (Texto consola)
 
 class RedireccionConsola:
     def __init__(self, text_widget):
@@ -165,6 +178,34 @@ class RedireccionConsola:
 
     def flush(self):
         pass
+
+# Función dinámica para cambiar los colores en vivo
+def cambiar_tema(event=None):
+    nombre_tema = var_tema.get()
+    t = TEMAS[nombre_tema]
+    
+    # Actualizar Ventana y Logo
+    ventana.configure(bg=t["bg"])
+    if 'etiqueta_logo' in globals():
+        etiqueta_logo.configure(bg=t["bg"])
+        
+    # Actualizar Estilos TTK Globales
+    estilo.configure("TFrame", background=t["bg"])
+    estilo.configure("TLabel", background=t["bg"], foreground=t["fg"])
+    estilo.configure("Titulo.TLabel", background=t["bg"], foreground=t["accent"])
+    estilo.configure("Panel.TLabel", background=t["bg_panel"], foreground=t["fg"])
+    
+    estilo.configure("TButton", background=t["accent"], foreground="white")
+    estilo.map("TButton", background=[("active", t["accent_h"])])
+    
+    estilo.configure("Pausa.TButton", background=PAUSE_COLOR, foreground="white")
+    estilo.map("Pausa.TButton", background=[("active", PAUSE_HOVER)])
+    
+    # Actualizar Widgets Nativos
+    marco_controles.configure(bg=t["bg_panel"])
+    entrada_carpeta.configure(bg=t["bg_input"], fg=t["fg"], insertbackground=t["fg"])
+    entrada_urls.configure(bg=t["bg_input"], fg=t["fg"], insertbackground=t["fg"])
+    consola_texto.configure(bg=t["c_bg"], fg=t["c_fg"])
 
 def seleccionar_carpeta():
     ruta = filedialog.askdirectory(title="Seleccionar carpeta de destino")
@@ -222,33 +263,12 @@ def cerrar_programa():
 
 # --- Configuración Principal de la Ventana ---
 ventana = tk.Tk()
-ventana.title("Tecnología ZENIT - Versión 2.0")
-ventana.geometry("850x800")
-ventana.configure(bg=BG_COLOR)
+ventana.title("Tecnología ZENIT - Versión 2.0 Multi-Tema")
+ventana.geometry("850x850")
 
-# --- Estilos Modernos ---
+# --- Inicialización de Estilos ---
 estilo = ttk.Style()
 estilo.theme_use('clam') 
-
-estilo.configure("TFrame", background=BG_COLOR)
-estilo.configure("TLabel", background=BG_COLOR, foreground=FG_COLOR, font=("Segoe UI", 10))
-estilo.configure("Titulo.TLabel", background=BG_COLOR, foreground=ACCENT_COLOR, font=("Segoe UI", 14, "bold"))
-
-estilo.configure("TButton", 
-                 background=ACCENT_COLOR, 
-                 foreground="white", 
-                 font=("Segoe UI", 10, "bold"), 
-                 borderwidth=0, 
-                 padding=6)
-estilo.map("TButton", background=[("active", ACCENT_HOVER)])
-
-estilo.configure("Pausa.TButton", 
-                 background=PAUSE_COLOR, 
-                 foreground="white", 
-                 font=("Segoe UI", 10, "bold"), 
-                 borderwidth=0, 
-                 padding=6)
-estilo.map("Pausa.TButton", background=[("active", PAUSE_HOVER)])
 
 marco_principal = ttk.Frame(ventana, padding="20")
 marco_principal.pack(fill=tk.BOTH, expand=True)
@@ -257,16 +277,16 @@ marco_principal.pack(fill=tk.BOTH, expand=True)
 marco_logo = ttk.Frame(marco_principal)
 marco_logo.pack(fill=tk.X, pady=(0, 10))
 
-if HAS_PIL and os.path.exists("ZENIT_2.jpg"):
+if HAS_PIL and os.path.exists("ZENIT.jpg"):
     try:
-        imagen_original = Image.open("ZENIT_2.jpg")
+        imagen_original = Image.open("ZENIT.jpg")
         ancho_deseado = 380
         proporcion = ancho_deseado / float(imagen_original.size[0])
         alto_calculado = int((float(imagen_original.size[1]) * float(proporcion)))
         imagen_redimensionada = imagen_original.resize((ancho_deseado, alto_calculado), Image.Resampling.LANCZOS)
         
         logo_tk = ImageTk.PhotoImage(imagen_redimensionada)
-        etiqueta_logo = tk.Label(marco_logo, image=logo_tk, bg=BG_COLOR)
+        etiqueta_logo = tk.Label(marco_logo, image=logo_tk)
         etiqueta_logo.image = logo_tk 
         etiqueta_logo.pack(anchor=tk.CENTER)
     except Exception as e:
@@ -275,31 +295,37 @@ else:
     ttk.Label(marco_logo, text="TECNOLOGÍA ZENIT", style="Titulo.TLabel").pack(anchor=tk.CENTER)
 
 # --- Sección 2: CONTROLES ---
-marco_controles = tk.Frame(marco_principal, bg="#2c3e50", padx=15, pady=15)
+marco_controles = tk.Frame(marco_principal, padx=15, pady=15)
 marco_controles.pack(fill=tk.X, pady=(0, 10))
 
 # Ruta Destino
-ttk.Label(marco_controles, text="📁 Ruta de Destino:", background="#2c3e50").grid(row=0, column=0, sticky=tk.W, pady=5)
+ttk.Label(marco_controles, text="📁 Ruta de Destino:", style="Panel.TLabel").grid(row=0, column=0, sticky=tk.W, pady=5)
 var_carpeta = tk.StringVar(value="Lista_Descargada")
-entrada_carpeta = tk.Entry(marco_controles, textvariable=var_carpeta, width=45, bg="#34495e", fg="white", insertbackground="white", font=("Segoe UI", 10), relief=tk.FLAT)
+entrada_carpeta = tk.Entry(marco_controles, textvariable=var_carpeta, width=45, font=("Segoe UI", 10), relief=tk.FLAT)
 entrada_carpeta.grid(row=0, column=1, padx=10, pady=5, ipady=3, columnspan=2, sticky=tk.W)
 ttk.Button(marco_controles, text="Explorar...", command=seleccionar_carpeta).grid(row=0, column=3, pady=5, padx=5)
 
-# Formato de Video
-ttk.Label(marco_controles, text="🎬 Formato:", background="#2c3e50").grid(row=1, column=0, sticky=tk.W, pady=5)
+# Formato y Calidad
+ttk.Label(marco_controles, text="🎬 Formato:", style="Panel.TLabel").grid(row=1, column=0, sticky=tk.W, pady=5)
 var_formato = tk.StringVar(value="mkv")
 combo_formato = ttk.Combobox(marco_controles, textvariable=var_formato, values=['mp4', 'mkv', 'webm', 'avi', 'mov', 'flv'], state="readonly", width=10, font=("Segoe UI", 10))
 combo_formato.grid(row=1, column=1, sticky=tk.W, padx=10, pady=5)
 
-# Calidad de Video
-ttk.Label(marco_controles, text="📐 Calidad:", background="#2c3e50").grid(row=1, column=2, sticky=tk.W, pady=5)
+ttk.Label(marco_controles, text="📐 Calidad:", style="Panel.TLabel").grid(row=1, column=2, sticky=tk.W, pady=5)
 var_calidad = tk.StringVar(value="720p")
 combo_calidad = ttk.Combobox(marco_controles, textvariable=var_calidad, values=['1080p', '720p', '480p', '360p', 'Máxima Calidad'], state="readonly", width=14, font=("Segoe UI", 10))
 combo_calidad.grid(row=1, column=3, sticky=tk.W, padx=5, pady=5)
 
+# Selector de Temas Visuales (NUEVO)
+ttk.Label(marco_controles, text="🎨 Tema Visual:", style="Panel.TLabel").grid(row=2, column=0, sticky=tk.W, pady=5)
+var_tema = tk.StringVar(value="Zenit (Oscuro)")
+combo_tema = ttk.Combobox(marco_controles, textvariable=var_tema, values=list(TEMAS.keys()), state="readonly", width=20, font=("Segoe UI", 10))
+combo_tema.grid(row=2, column=1, sticky=tk.W, padx=10, pady=5, columnspan=2)
+combo_tema.bind("<<ComboboxSelected>>", cambiar_tema)
+
 # --- Sección 3: ENLACES Y BOTONES ---
 ttk.Label(marco_principal, text="🔗 Pegar Enlaces (separados por espacios, comas o saltos de línea):").pack(anchor=tk.W)
-entrada_urls = tk.Text(marco_principal, height=3, font=("Segoe UI", 10), bg="#34495e", fg="white", insertbackground="white", relief=tk.FLAT, padx=8, pady=8)
+entrada_urls = tk.Text(marco_principal, height=3, font=("Segoe UI", 10), relief=tk.FLAT, padx=8, pady=8)
 entrada_urls.pack(fill=tk.X, pady=5)
 
 marco_acciones = ttk.Frame(marco_principal)
@@ -313,20 +339,23 @@ btn_pausa.pack(side=tk.RIGHT, fill=tk.X, expand=True, padx=(5, 0))
 
 # --- Sección 4: CONSOLA CIBERNÉTICA ---
 ttk.Label(marco_principal, text="🖥 Terminal de Operaciones:").pack(anchor=tk.W)
-consola_texto = scrolledtext.ScrolledText(marco_principal, height=14, bg=CONSOLE_BG, fg=CONSOLE_FG, font=("Consolas", 9), relief=tk.FLAT, padx=10, pady=10)
+consola_texto = scrolledtext.ScrolledText(marco_principal, height=14, font=("Consolas", 9), relief=tk.FLAT, padx=10, pady=10)
 consola_texto.pack(fill=tk.BOTH, expand=True, pady=5)
 
-# Redirigir el output de Python a la interfaz
+# Redirigir el output
 sys.stdout = RedireccionConsola(consola_texto)
 sys.stderr = sys.stdout 
 
-# Mensaje de bienvenida corporativo
+# Mensaje corporativo
 print("================================================================")
 print(" SISTEMA DE DESCARGA: TECNOLOGÍA ZENIT [ACTIVO]")
 print("================================================================")
 print("[+] Conectado al motor asíncrono.")
 print("[+] En espera de directrices de descarga...")
-print("[TIP] Selecciona formato, calidad y carpeta antes de añadir tareas.\n")
+print("[TIP] Puedes cambiar el aspecto del programa en 'Tema Visual'.\n")
+
+# Forzar la pintura del tema inicial antes de mostrar la ventana
+cambiar_tema()
 
 ventana.protocol("WM_DELETE_WINDOW", cerrar_programa)
 ventana.mainloop()
