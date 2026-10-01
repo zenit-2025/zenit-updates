@@ -45,7 +45,6 @@ def descargar_playlist(url, carpeta_destino="Lista_Descargada", formato_video="m
     ruta_base = os.path.join(carpeta_destino, carpeta_serie_segura, "Season 01")
     plantilla_salida = os.path.join(ruta_base, f"{carpeta_serie_segura} - S01E%(playlist_autonumber)02d - %(title).40s [%(id)s].%(ext)s")
 
-    # Mapeo de opciones de calidad
     if calidad_video == "1080p":
         formato_cadena = 'bestvideo[height<=1080][vcodec^=avc]+bestaudio[ext=m4a]/best[height<=1080]/best'
     elif calidad_video == "720p":
@@ -54,7 +53,7 @@ def descargar_playlist(url, carpeta_destino="Lista_Descargada", formato_video="m
         formato_cadena = 'bestvideo[height<=480]+bestaudio/best[height<=480]/best'
     elif calidad_video == "360p":
         formato_cadena = 'bestvideo[height<=360]+bestaudio/best[height<=360]/best'
-    else:  # Máxima Calidad
+    else:
         formato_cadena = 'bestvideo+bestaudio/best'
 
     opciones = {
@@ -109,7 +108,7 @@ def descargar_playlist(url, carpeta_destino="Lista_Descargada", formato_video="m
 # ==========================================
 cola_descargas = queue.Queue()
 estado_pausa = threading.Event()
-estado_pausa.set()  # Inicia activo (no pausado)
+estado_pausa.set()
 
 def motor_de_descargas():
     numero = 1
@@ -120,7 +119,6 @@ def motor_de_descargas():
             
         url, carpeta, formato, calidad = paquete
         
-        # Verificación de pausa previa a la descarga
         if not estado_pausa.is_set():
             print("\n[PAUSA] El sistema está pausado. Esperando reanudación para la siguiente tarea...")
             estado_pausa.wait()
@@ -143,7 +141,6 @@ hilo_trabajador.start()
 # 3. INTERFAZ GRÁFICA MULTI-TEMA (ZENIT-MX)
 # ==========================================
 
-# Catálogo de Temas Disponibles
 TEMAS = {
     "Zenit (Oscuro)": {
         "bg": "#1a242f", "fg": "#ecf0f1", "accent": "#00a8e8", "accent_h": "#007bb5",
@@ -179,17 +176,14 @@ class RedireccionConsola:
     def flush(self):
         pass
 
-# Función dinámica para cambiar los colores en vivo
 def cambiar_tema(event=None):
     nombre_tema = var_tema.get()
     t = TEMAS[nombre_tema]
     
-    # Actualizar Ventana y Logo
     ventana.configure(bg=t["bg"])
     if 'etiqueta_logo' in globals():
         etiqueta_logo.configure(bg=t["bg"])
         
-    # Actualizar Estilos TTK Globales
     estilo.configure("TFrame", background=t["bg"])
     estilo.configure("TLabel", background=t["bg"], foreground=t["fg"])
     estilo.configure("Titulo.TLabel", background=t["bg"], foreground=t["accent"])
@@ -201,7 +195,6 @@ def cambiar_tema(event=None):
     estilo.configure("Pausa.TButton", background=PAUSE_COLOR, foreground="white")
     estilo.map("Pausa.TButton", background=[("active", PAUSE_HOVER)])
     
-    # Actualizar Widgets Nativos
     marco_controles.configure(bg=t["bg_panel"])
     entrada_carpeta.configure(bg=t["bg_input"], fg=t["fg"], insertbackground=t["fg"])
     entrada_urls.configure(bg=t["bg_input"], fg=t["fg"], insertbackground=t["fg"])
@@ -277,9 +270,12 @@ marco_principal.pack(fill=tk.BOTH, expand=True)
 marco_logo = ttk.Frame(marco_principal)
 marco_logo.pack(fill=tk.X, pady=(0, 10))
 
-if HAS_PIL and os.path.exists("ZENIT.jpg"):
+# Detección inteligente del logo
+nombre_logo = "ZENIT.jpg" if os.path.exists("ZENIT.jpg") else ("ZENIT_2.jpg" if os.path.exists("ZENIT_2.jpg") else None)
+
+if HAS_PIL and nombre_logo:
     try:
-        imagen_original = Image.open("ZENIT.jpg")
+        imagen_original = Image.open(nombre_logo)
         ancho_deseado = 380
         proporcion = ancho_deseado / float(imagen_original.size[0])
         alto_calculado = int((float(imagen_original.size[1]) * float(proporcion)))
@@ -298,14 +294,12 @@ else:
 marco_controles = tk.Frame(marco_principal, padx=15, pady=15)
 marco_controles.pack(fill=tk.X, pady=(0, 10))
 
-# Ruta Destino
 ttk.Label(marco_controles, text="📁 Ruta de Destino:", style="Panel.TLabel").grid(row=0, column=0, sticky=tk.W, pady=5)
 var_carpeta = tk.StringVar(value="Lista_Descargada")
 entrada_carpeta = tk.Entry(marco_controles, textvariable=var_carpeta, width=45, font=("Segoe UI", 10), relief=tk.FLAT)
 entrada_carpeta.grid(row=0, column=1, padx=10, pady=5, ipady=3, columnspan=2, sticky=tk.W)
 ttk.Button(marco_controles, text="Explorar...", command=seleccionar_carpeta).grid(row=0, column=3, pady=5, padx=5)
 
-# Formato y Calidad
 ttk.Label(marco_controles, text="🎬 Formato:", style="Panel.TLabel").grid(row=1, column=0, sticky=tk.W, pady=5)
 var_formato = tk.StringVar(value="mkv")
 combo_formato = ttk.Combobox(marco_controles, textvariable=var_formato, values=['mp4', 'mkv', 'webm', 'avi', 'mov', 'flv'], state="readonly", width=10, font=("Segoe UI", 10))
@@ -316,7 +310,6 @@ var_calidad = tk.StringVar(value="720p")
 combo_calidad = ttk.Combobox(marco_controles, textvariable=var_calidad, values=['1080p', '720p', '480p', '360p', 'Máxima Calidad'], state="readonly", width=14, font=("Segoe UI", 10))
 combo_calidad.grid(row=1, column=3, sticky=tk.W, padx=5, pady=5)
 
-# Selector de Temas Visuales (NUEVO)
 ttk.Label(marco_controles, text="🎨 Tema Visual:", style="Panel.TLabel").grid(row=2, column=0, sticky=tk.W, pady=5)
 var_tema = tk.StringVar(value="Zenit (Oscuro)")
 combo_tema = ttk.Combobox(marco_controles, textvariable=var_tema, values=list(TEMAS.keys()), state="readonly", width=20, font=("Segoe UI", 10))
@@ -346,7 +339,6 @@ consola_texto.pack(fill=tk.BOTH, expand=True, pady=5)
 sys.stdout = RedireccionConsola(consola_texto)
 sys.stderr = sys.stdout 
 
-# Mensaje corporativo
 print("================================================================")
 print(" SISTEMA DE DESCARGA: TECNOLOGÍA ZENIT [ACTIVO]")
 print("================================================================")
@@ -354,7 +346,6 @@ print("[+] Conectado al motor asíncrono.")
 print("[+] En espera de directrices de descarga...")
 print("[TIP] Puedes cambiar el aspecto del programa en 'Tema Visual'.\n")
 
-# Forzar la pintura del tema inicial antes de mostrar la ventana
 cambiar_tema()
 
 ventana.protocol("WM_DELETE_WINDOW", cerrar_programa)
