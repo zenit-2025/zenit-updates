@@ -10,6 +10,14 @@ echo      Comprobando Actualizaciones del Sistema OTA...
 echo =======================================================
 echo.
 
+:: [MEJORA] Pre-chequeo de conectividad a Internet (Modo Off-line)
+ping -n 1 raw.githubusercontent.com >nul 2>&1
+if errorlevel 1 (
+    color 0E
+    echo [ADVERTENCIA] Sin conexion a Internet. Iniciando en modo Off-line...
+    goto :verificar_dependencias
+)
+
 set "URL_BAT=https://raw.githubusercontent.com/zenit-2025/zenit-updates/main/Iniciar.bat?nocache=%RANDOM%"
 curl -s -f -L -o Iniciar_temp.bat "%URL_BAT%"
 
@@ -31,34 +39,28 @@ set "URL_PYTHON=https://raw.githubusercontent.com/zenit-2025/zenit-updates/main/
 curl -s -f -L -o actualizacion_temp.py "%URL_PYTHON%"
 
 IF EXIST actualizacion_temp.py (
-    move /y actualizacion_temp.py Gestor-ZENIT.py >nul
-    color 0A
-    echo [OK] Modulo principal Python sincronizado y al dia.
+    :: [MEJORA] Proteccion de almacenamiento usando FC para evitar sobreescrituras innecesarias
+    IF EXIST Gestor-ZENIT.py (
+        fc Gestor-ZENIT.py actualizacion_temp.py >nul
+        if errorlevel 1 (
+            move /y actualizacion_temp.py Gestor-ZENIT.py >nul
+            color 0A
+            echo [OK] Modulo principal Python actualizado a la ultima version.
+        ) ELSE (
+            del actualizacion_temp.py
+            color 0A
+            echo [OK] Modulo principal Python ya esta al dia.
+        )
+    ) ELSE (
+        move /y actualizacion_temp.py Gestor-ZENIT.py >nul
+        color 0A
+        echo [OK] Modulo principal Python descargado por primera vez.
+    )
 ) ELSE (
     color 0E
-    echo [ADVERTENCIA] No se pudo conectar al servidor de GitHub.
+    echo [ADVERTENCIA] No se pudo descargar la actualizacion de GitHub.
 )
 echo.
 
-echo =======================================================
-echo      Verificando Dependencias de Software...
-echo =======================================================
-pip install -U yt-dlp -q
-pip install pillow -q
-pip install mutagen -q
-
-echo.
-IF NOT EXIST "ffmpeg\ffmpeg.exe" (
-    color 0C
-    echo [ERROR CRITICO] Falta el motor FFmpeg. 
-    pause
-    exit
-)
-
-color 0B
-echo =======================================================
-echo      Iniciando Sistema Principal ZENIT-MX...
-echo =======================================================
-python Gestor-ZENIT.py
-
-exit
+:verificar_dependencias
+echo =================================
