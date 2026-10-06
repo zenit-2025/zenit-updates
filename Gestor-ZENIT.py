@@ -322,4 +322,46 @@ combo_formato.grid(row=1, column=1, sticky=tk.W, padx=10, pady=5)
 
 ttk.Label(marco_controles, text="📐 Calidad:", style="Panel.TLabel").grid(row=1, column=2, sticky=tk.W, pady=5)
 var_calidad = tk.StringVar(value="720p")
-combo_calidad = ttk.Combobox
+combo_calidad = ttk.Combobox(marco_controles, textvariable=var_calidad, values=['1080p', '720p', '480p', '360p', 'Máxima Calidad'], state="readonly", width=14, font=("Segoe UI", 10))
+combo_calidad.grid(row=1, column=3, sticky=tk.W, padx=5, pady=5)
+
+ttk.Label(marco_controles, text="🎨 Tema Visual:", style="Panel.TLabel").grid(row=2, column=0, sticky=tk.W, pady=5)
+var_tema = tk.StringVar(value="Zenit (Oscuro)")
+combo_tema = ttk.Combobox(marco_controles, textvariable=var_tema, values=list(TEMAS.keys()), state="readonly", width=20, font=("Segoe UI", 10))
+combo_tema.grid(row=2, column=1, sticky=tk.W, padx=10, pady=5, columnspan=2)
+combo_tema.bind("<<ComboboxSelected>>", cambiar_tema)
+
+# --- Sección 3: ENLACES Y BOTONES ---
+ttk.Label(marco_principal, text="🔗 Pegar Enlaces (separados por espacios, comas o saltos de línea):").pack(anchor=tk.W)
+entrada_urls = tk.Text(marco_principal, height=3, font=("Segoe UI", 10), relief=tk.FLAT, padx=8, pady=8)
+entrada_urls.pack(fill=tk.X, pady=5)
+
+marco_acciones = ttk.Frame(marco_principal)
+marco_acciones.pack(fill=tk.X, pady=5)
+
+btn_agregar = ttk.Button(marco_acciones, text="➕ AÑADIR A LA COLA", command=agregar_a_cola)
+btn_agregar.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+
+btn_pausa = ttk.Button(marco_acciones, text="⏸ PAUSAR DESCARGAS", command=alternar_pausa)
+btn_pausa.pack(side=tk.RIGHT, fill=tk.X, expand=True, padx=(5, 0))
+
+# --- Sección 4: CONSOLA CIBERNÉTICA ---
+ttk.Label(marco_principal, text="🖥 Terminal de Operaciones:").pack(anchor=tk.W)
+consola_texto = scrolledtext.ScrolledText(marco_principal, height=14, font=("Consolas", 9), relief=tk.FLAT, padx=10, pady=10)
+consola_texto.pack(fill=tk.BOTH, expand=True, pady=5)
+
+# Redirigir el output
+sys.stdout = RedireccionConsola(consola_texto)
+sys.stderr = sys.stdout 
+
+print("================================================================")
+print(" SISTEMA DE DESCARGA: TECNOLOGÍA ZENIT [ACTIVO]")
+print("================================================================")
+print("[+] Conectado al motor asíncrono.")
+print("[+] En espera de directrices de descarga...")
+print("[TIP] Puedes cambiar el aspecto del programa en 'Tema Visual'.\n")
+
+cambiar_tema()
+
+ventana.protocol("WM_DELETE_WINDOW", cerrar_programa)
+ventana.mainloop()
