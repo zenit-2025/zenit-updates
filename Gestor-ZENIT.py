@@ -88,7 +88,7 @@ IF NOT EXIST "ffmpeg\ffmpeg.exe" (
     where ffmpeg >nul 2>&1
     if errorlevel 1 (
         color 0C
-        echo [ERROR CRITICO] Falta el motor FFmpeg ^(ni en carpeta local ni en el sistema general^). 
+        echo [ERROR CRITICO] Falta el motor FFmpeg ^(ni en carpeta local ni en el sistema general^).
         pause
         exit
     )
@@ -116,6 +116,6 @@ if %errorlevel% neq 0 (
     pause
 )
 
-:: [REPARACION FINAL] Evitar que la ventana se cierre si todo sale bien o si falla.
+:: [REPARACION FINAL]
 pause
 exit
